@@ -19,7 +19,7 @@ public:
 
 	UPROPERTY(BlueprintReadWrite)
 	UCameraComponent* PawnCamera;
-	
+
 	UPROPERTY(BlueprintReadWrite)
 	ASnakeBase* SnakeActor;
 
@@ -30,7 +30,7 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-public:	
+public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
@@ -39,4 +39,9 @@ public:
 
 	void CreateSnakeActor();
 
+	UFUNCTION()
+	void HandlePlayerVerticalInput(float value);
+	
+	UFUNCTION()
+	void HandlePlayerHorizontalInput(float value);
 };
