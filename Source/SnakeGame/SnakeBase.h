@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "SnakeBase.generated.h"
 
+class ABonus;
 class AFood;
 class ASnakeElementBase;
 
@@ -28,6 +29,9 @@ public:
 	TSubclassOf<AFood> FoodActorClass;
 
 	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<ABonus> BonusActorClass;
+
+	UPROPERTY(EditDefaultsOnly)
 	float ElementSize;
 
 	UPROPERTY(EditDefaultsOnly)
@@ -35,6 +39,13 @@ public:
 
 	UPROPERTY()
 	TArray<ASnakeElementBase*> SnakeElements;
+
+	UPROPERTY(EditDefaultsOnly)
+	float Delta_Speed = 0.1;
+	UPROPERTY(EditDefaultsOnly)
+	float Max_Speed = 10.5;
+	UPROPERTY(EditDefaultsOnly)
+	float Min_Speed = 9.5;
 
 protected:
 	// Called when the game starts or when spawned
@@ -46,6 +57,8 @@ private:
 	EMovementDirection NextMovementDirection;
 
 	void SpawnFood();
+
+	FVector GenerateLocation();
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -67,4 +80,9 @@ public:
 
 	UFUNCTION()
 	int GetRandom();
+
+	UFUNCTION(BlueprintCallable)
+	void SpawnBonus();
+
+	void SetBonus(bool bIsNegativeBonus);
 };

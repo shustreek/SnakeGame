@@ -3,7 +3,10 @@
 
 #include "SnakeBase.h"
 
+#include <algorithm>
+
 #include "Food.h"
+#include "Bonus.h"
 #include "SnakeElementBase.h"
 
 // Sets default values
@@ -14,7 +17,7 @@ ASnakeBase::ASnakeBase()
 	ElementSize = 100.f;
 	MovementSpeed = 10.f;
 	NextMovementDirection = EMovementDirection::DOWN;
-	srand(17);
+	srand(time(NULL));
 }
 
 // Called when the game starts or when spawned
@@ -60,19 +63,28 @@ void ASnakeBase::AddSnakeElement(int ElementNum)
 
 void ASnakeBase::SpawnFood()
 {
-	const int X = GetRandom();
-	const int Y = GetRandom();
-	for (const ASnakeElementBase* SnakeElement : SnakeElements)
-	{
-		const FVector Location = SnakeElement->GetActorLocation();
-		if (Location.X == X && Location.Y == Y)
-		{
-			SpawnFood();
-			return;
-		}
-	}
 	const auto FoodActor = GetWorld()->SpawnActor<AFood>(FoodActorClass, FTransform());
-	FoodActor->SetActorLocation(FVector(X, Y, 0));
+	FoodActor->SetActorLocation(GenerateLocation());
+}
+
+void ASnakeBase::SpawnBonus()
+{
+	const auto BonusActor = GetWorld()->SpawnActor<ABonus>(BonusActorClass, FTransform());
+	BonusActor->SetActorLocation(GenerateLocation());
+}
+
+void ASnakeBase::SetBonus(bool bIsNegativeBonus)
+{
+	if (bIsNegativeBonus)
+	{
+		MovementSpeed = std::min(Max_Speed, MovementSpeed + Delta_Speed);
+		SetActorTickInterval(MovementSpeed);
+	}
+	else
+	{
+		MovementSpeed = std::max(Min_Speed, MovementSpeed - Delta_Speed);
+		SetActorTickInterval(MovementSpeed);
+	}
 }
 
 void ASnakeBase::Move()
@@ -134,4 +146,19 @@ EMovementDirection ASnakeBase::GetMovementDirection()
 int ASnakeBase::GetRandom()
 {
 	return (rand() % 17 - 8) * ElementSize;
+}
+
+FVector ASnakeBase::GenerateLocation()
+{
+	const int X = GetRandom();
+	const int Y = GetRandom();
+	for (const ASnakeElementBase* SnakeElement : SnakeElements)
+	{
+		const FVector Location = SnakeElement->GetActorLocation();
+		if (Location.X == X && Location.Y == Y)
+		{
+			return GenerateLocation();
+		}
+	}
+	return FVector(X, Y, 0);
 }
