@@ -2,6 +2,8 @@
 
 
 #include "SnakeBase.h"
+
+#include "Food.h"
 #include "SnakeElementBase.h"
 
 // Sets default values
@@ -11,7 +13,8 @@ ASnakeBase::ASnakeBase()
 	PrimaryActorTick.bCanEverTick = true;
 	ElementSize = 100.f;
 	MovementSpeed = 10.f;
-	LastMovementDirection = EMovementDirection::DOWN;
+	NextMovementDirection = EMovementDirection::DOWN;
+	srand(17);
 }
 
 // Called when the game starts or when spawned
@@ -33,7 +36,16 @@ void ASnakeBase::AddSnakeElement(int ElementNum)
 {
 	for (int i = 0; i < ElementNum; i++)
 	{
-		FVector NewLocation(SnakeElements.Num() * ElementSize, 0, 0);
+		FVector NewLocation;
+		const int32 Num = SnakeElements.Num();
+		if (Num == 0)
+		{
+			NewLocation = FVector(0, 0, 0);
+		}
+		else
+		{
+			NewLocation = SnakeElements[Num - 1]->GetActorLocation();
+		}
 		FTransform NewTransform(NewLocation);
 		ASnakeElementBase* NewElement = GetWorld()->SpawnActor<ASnakeElementBase>(SnakeElementClass, NewTransform);
 		NewElement->SnakeOwner = this;
@@ -43,12 +55,30 @@ void ASnakeBase::AddSnakeElement(int ElementNum)
 			NewElement->SetFirstElementType();
 		}
 	}
+	SpawnFood();
+}
+
+void ASnakeBase::SpawnFood()
+{
+	const int X = GetRandom();
+	const int Y = GetRandom();
+	for (const ASnakeElementBase* SnakeElement : SnakeElements)
+	{
+		const FVector Location = SnakeElement->GetActorLocation();
+		if (Location.X == X && Location.Y == Y)
+		{
+			SpawnFood();
+			return;
+		}
+	}
+	const auto FoodActor = GetWorld()->SpawnActor<AFood>(FoodActorClass, FTransform());
+	FoodActor->SetActorLocation(FVector(X, Y, 0));
 }
 
 void ASnakeBase::Move()
 {
 	FVector MovementVector(ForceInitToZero);
-	switch (LastMovementDirection)
+	switch (NextMovementDirection)
 	{
 	case EMovementDirection::UP:
 		MovementVector.X += ElementSize;
@@ -75,17 +105,33 @@ void ASnakeBase::Move()
 
 	SnakeElements[0]->AddActorWorldOffset(MovementVector);
 	SnakeElements[0]->ToggleCollision();
+	LastMovementDirection = NextMovementDirection;
 }
 
 void ASnakeBase::SnakeElementOverlap(ASnakeElementBase* OverlappedElement, AActor* OtherActor)
 {
 	if (IsValid(OverlappedElement))
 	{
-		bool IsFirst = SnakeElements.Find(OverlappedElement) == 0;
+		const bool IsFirst = SnakeElements.Find(OverlappedElement) == 0;
 		IInteractable* InteractableInterface = Cast<IInteractable>(OtherActor);
 		if (InteractableInterface)
 		{
 			InteractableInterface->Interact(this, IsFirst);
 		}
 	}
+}
+
+void ASnakeBase::ChangeMovementDirection(const EMovementDirection& Direction)
+{
+	NextMovementDirection = Direction;
+}
+
+EMovementDirection ASnakeBase::GetMovementDirection()
+{
+	return LastMovementDirection;
+}
+
+int ASnakeBase::GetRandom()
+{
+	return (rand() % 17 - 8) * ElementSize;
 }

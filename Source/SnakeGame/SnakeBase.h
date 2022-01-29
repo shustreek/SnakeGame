@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "SnakeBase.generated.h"
 
+class AFood;
 class ASnakeElementBase;
 
 UENUM()
@@ -24,6 +25,9 @@ public:
 	TSubclassOf<ASnakeElementBase> SnakeElementClass;
 
 	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<AFood> FoodActorClass;
+
+	UPROPERTY(EditDefaultsOnly)
 	float ElementSize;
 
 	UPROPERTY(EditDefaultsOnly)
@@ -32,13 +36,16 @@ public:
 	UPROPERTY()
 	TArray<ASnakeElementBase*> SnakeElements;
 
-	UPROPERTY()
-	EMovementDirection LastMovementDirection;
-
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+private:
+	EMovementDirection LastMovementDirection;
+
+	EMovementDirection NextMovementDirection;
+
+	void SpawnFood();
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -51,4 +58,13 @@ public:
 
 	UFUNCTION()
 	void SnakeElementOverlap(ASnakeElementBase* OverlappedElement, AActor* OtherActor);
+
+	UFUNCTION()
+	void ChangeMovementDirection(const EMovementDirection& Direction);
+
+	UFUNCTION()
+	EMovementDirection GetMovementDirection();
+
+	UFUNCTION()
+	int GetRandom();
 };
